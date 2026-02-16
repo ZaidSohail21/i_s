@@ -65,9 +65,11 @@ name: Integration
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build: 
@@ -75,23 +77,39 @@ jobs:
 
     strategy:
       matrix:
-        # Note: Node 14 and 16 are EOL; I recommend 18.x or 20.x for Next.js
-        node-version: [18.x, 20.x]
+        # Next.js requires Node.js >= 20.9.0
+        node-version: [20.x, 22.x]
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: npm install
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
-    - name: Run Build
-      # This is where you inject the variable
-      env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      run: npm run build
+      - name: Install Dependencies
+        # 'npm ci' ensures a clean, consistent install based on your lockfile
+        run: npm ci
+
+      - name: Prisma Generate
+        # Generates the Prisma Client types needed for the build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma generate
+
+      - name: Run Build
+        # All build-time environment variables MUST be listed here
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_STACK_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}
+        run: npm run build --if-present
+
+      - name: Run Tests
+        # Provide variables here as well so your tests don't fail on DB/Auth calls
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_STACK_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}
+        run: npm test
