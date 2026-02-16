@@ -77,7 +77,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x] # Kept to 20.x for faster runs; add 22.x if needed
+        node-version: [20.x]
 
     steps:
       - name: Checkout Repository
@@ -98,11 +98,12 @@ jobs:
         run: npx prisma generate
 
       - name: Run Build
-        # All 3 variables injected here for the Next.js compiler
+        # We inject all 4 keys here to satisfy the Next.js build-time check
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXT_PUBLIC_STACK_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}
           NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: ${{ secrets.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY }}
+          STACK_SECRET_SERVER_KEY: ${{ secrets.STACK_SECRET_SERVER_KEY }}
         run: npm run build --if-present
 
       - name: Run Tests
@@ -110,4 +111,5 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXT_PUBLIC_STACK_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}
           NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: ${{ secrets.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY }}
+          STACK_SECRET_SERVER_KEY: ${{ secrets.STACK_SECRET_SERVER_KEY }}
         run: npm test
