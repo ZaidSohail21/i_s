@@ -90,18 +90,26 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm install
+      - name: Install dependencies
+        run: npm install
 
-      # ✅ Create .env.local BEFORE Prisma commands
+      # ✅ Step 1: Create .env.local
       - name: Create .env.local
         run: |
           echo "DATABASE_URL=${DATABASE_URL}" >> .env.local
           echo "NEXT_PUBLIC_STACK_PROJECT_ID=${NEXT_PUBLIC_STACK_PROJECT_ID}" >> .env.local
 
-      # Prisma commands
+      # ✅ Step 2: Export env variables (optional, extra safety)
+      - name: Export env variables
+        run: |
+          export DATABASE_URL=${DATABASE_URL}
+          export NEXT_PUBLIC_STACK_PROJECT_ID=${NEXT_PUBLIC_STACK_PROJECT_ID}
+
+      # ✅ Step 3: Prisma commands
       - run: npx prisma db push
       - run: npx prisma generate
       - run: npm run seed
 
-      # Next.js build
+      # ✅ Step 4: Build Next.js
       - run: npm run build
+
