@@ -66,7 +66,6 @@
 
 name: CI/CD Build
 
-# Trigger workflow on push to main or pull request to main
 on:
   push:
     branches:
@@ -77,51 +76,32 @@ on:
 
 jobs:
   build:
-    name: Build Next.js with Prisma & Stack Auth
     runs-on: ubuntu-latest
 
-    # Inject secrets as environment variables
     env:
-      NEXT_PUBLIC_STACK_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      NEXT_PUBLIC_STACK_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}
 
     steps:
-      # 1️⃣ Checkout code
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: 'npm'
 
-      # 3️⃣ Install dependencies
-      - name: Install dependencies
-        run: npm install
+      - run: npm install
 
-      # 4️⃣ Create .env.local dynamically
+      # ✅ Create .env.local BEFORE Prisma commands
       - name: Create .env.local
         run: |
-          echo "NEXT_PUBLIC_STACK_PROJECT_ID=${NEXT_PUBLIC_STACK_PROJECT_ID}" >> .env.local
           echo "DATABASE_URL=${DATABASE_URL}" >> .env.local
+          echo "NEXT_PUBLIC_STACK_PROJECT_ID=${NEXT_PUBLIC_STACK_PROJECT_ID}" >> .env.local
 
-      # 5️⃣ Push Prisma schema and generate client
-      - name: Push Prisma schema
-        run: npx prisma db push
+      # Prisma commands
+      - run: npx prisma db push
+      - run: npx prisma generate
+      - run: npm run seed
 
-      - name: Generate Prisma client
-        run: npx prisma generate
-
-      # 6️⃣ Seed the database (optional)
-      - name: Seed database
-        run: npm run seed
-
-      # 7️⃣ Build Next.js project
-      - name: Build Next.js
-        run: npm run build
-
-      # Optional: run tests if you have them
-      # - name: Run tests
-      #   run: npm test
+      # Next.js build
+      - run: npm run build
