@@ -64,6 +64,7 @@
 #         run: npm run build
 
 
+
 name: CI/CD Build
 
 on:
@@ -98,30 +99,22 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # 4️⃣ Create .env.local from GitHub secrets
+      # 4️⃣ Create temporary .env.local for Stack Auth
       - name: Create .env.local
         run: |
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env.local
-          echo "NEXT_PUBLIC_STACK_PROJECT_ID=${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}" >> .env.local
+          echo "NEXT_PUBLIC_STACK_PROJECT_ID=${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}" > .env.local
 
-      # 5️⃣ Make sure Prisma sees the variables
-      - name: Export env variables
-        run: |
-          export DATABASE_URL=$(grep DATABASE_URL .env.local | cut -d '=' -f2-)
-          export NEXT_PUBLIC_STACK_PROJECT_ID=$(grep NEXT_PUBLIC_STACK_PROJECT_ID .env.local | cut -d '=' -f2-)
-
-      # 6️⃣ Prisma commands
+      # 5️⃣ Prisma commands using --url
       - name: Push Prisma schema
-        run: npx prisma db push
+        run: npx prisma db push --url ${{ secrets.DATABASE_URL }}
 
       - name: Generate Prisma client
-        run: npx prisma generate
+        run: npx prisma generate --url ${{ secrets.DATABASE_URL }}
 
-      # 7️⃣ Seed database
+      # 6️⃣ Seed database
       - name: Seed database
-        run: npm run seed
+        run: npm run seed --if-present
 
-      # 8️⃣ Build Next.js project
+      # 7️⃣ Build Next.js project
       - name: Build Next.js
         run: npm run build
-
