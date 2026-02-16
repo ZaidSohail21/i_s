@@ -84,7 +84,7 @@ jobs:
         node-version: [20.x]
 
     steps:
-      # 1️⃣ Checkout code
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -99,22 +99,25 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # 4️⃣ Create temporary .env.local for Stack Auth
+      # 4️⃣ Create .env.local for Prisma + Stack Auth
       - name: Create .env.local
         run: |
-          echo "NEXT_PUBLIC_STACK_PROJECT_ID=${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}" > .env.local
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env.local
+          echo "NEXT_PUBLIC_STACK_PROJECT_ID=${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}" >> .env.local
 
-      # 5️⃣ Prisma commands using --url
-      - name: Push Prisma schema
-        run: npx prisma db push --url ${{ secrets.DATABASE_URL }}
+      # 5️⃣ Push Prisma schema (Prisma 6 requires env variable or .env.local)
+      - name: Prisma db push
+        run: npx prisma db push
 
-      - name: Generate Prisma client
-        run: npx prisma generate --url ${{ secrets.DATABASE_URL }}
+      # 6️⃣ Generate Prisma client
+      - name: Prisma generate
+        run: npx prisma generate
 
-      # 6️⃣ Seed database
+      # 7️⃣ Seed database
       - name: Seed database
         run: npm run seed --if-present
 
-      # 7️⃣ Build Next.js project
+      # 8️⃣ Build Next.js
       - name: Build Next.js
         run: npm run build
+
