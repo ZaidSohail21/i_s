@@ -32,7 +32,8 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  const demoUserId = "clh5lnu80000v0b60f4f4k3r3";
+  // const demoUserId = "clh5lnu80000v0b60f4f4k3r3";
+  const demoUserId = "64c943c4-1d30-42e8-9a8a-e77ae4553f22";
 
   const products = Array.from({ length: 25 }).map((_, i) => ({
     userId: demoUserId,
